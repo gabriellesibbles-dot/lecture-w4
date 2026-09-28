@@ -36,9 +36,9 @@ def get_devices():
 
 @app.get("/devices/{name}")
 def get_device(name: str):
-    for device in devices.find({}, {"_id": 0}):
-        if device["name"] == name:
-            return device
+    device = devices.find_one({"name": name}, {"_id": 0})
+    if device:
+        return device
     raise HTTPException(status_code=404, detail="No device called " + name)
 
 
