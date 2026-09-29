@@ -53,7 +53,17 @@ def create_device(device: Device):
         devices.insert_one(new_device)
     except DuplicateKeyError:
         print("Error: A device with this name already exists.")
-        raise HTTPException(status_code=400, detail=f"A device with this name '{device.name}' already exists.")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"A device with this name '{device.name}' already exists."
+        )
     
     new_device.pop("_id")  # remove the _id field before returning
     return new_device
+
+@app.delete("/devices/{name}", status_code=204)
+def delete_device(name: str):
+    result = devices.delete_one({"name": name})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="No device called " + name)
+    return None
