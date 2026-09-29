@@ -8,11 +8,15 @@ from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 
 load_dotenv()
 client = MongoClient(os.getenv("MONGODB_URI")) #connection to the cluster 
 db = client["edcse3038"] #database 
 devices = db["devices"]  #collection
+
+devices.create_index([("name", 1)], unique=True)
+
 
 # project, cluster, database, collection
  
@@ -45,6 +49,11 @@ def get_device(name: str):
 @app.post("/devices", status_code=201)
 def create_device(device: Device):
     new_device = device.model_dump()
-    devices.insert_one(new_device)
+    try:
+        devices.insert_one(new_device)
+    except DuplicateKeyError:
+        print("Error: A device with this name already exists.")
+        raise HTTPException(status_code=400, detail=f"A device with this name '{device.name}' already exists.")
+    
     new_device.pop("_id")  # remove the _id field before returning
     return new_device
